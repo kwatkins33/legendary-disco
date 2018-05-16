@@ -1,0 +1,95 @@
+---
+title: "Global MERS Cases"
+author: "Katherine Watkins"
+date: "5/16/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## **Global MERS Data**
+
+
+
+```{r , echo= FALSE}
+library(lubridate)
+library(ggplot2)
+library(htmlwidgets)
+library(plotly)
+mers <- read.csv("cases.csv")
+class(mers$onset)
+mers$hospitalized[890]<-c('2015-02-20')
+mers<-mers[-471,]
+mers$onset2<-ymd(mers$onset)
+mers$hospitalized2<-ymd(mers$hospitalized)
+class(mers$onset2)
+day0<-min(na.omit(mers$onset2))
+mers$epi.day<-as.numeric(mers$onset2-day0)
+```
+
+
+
+
+
+## This is a plot of the global count of MERS cases by the date of symptom onset:
+
+
+
+
+
+```{r, echo=FALSE}
+ggplot(data=mers)+
+  geom_bar(mapping=aes(x=epi.day))+
+  labs(x='Epidemic day',y='Case count', title='Global count of MERS cases by date of symptom onset',caption="Data from:http://github.com/rambaut/MERS-Cases/blob/gh-pages/data/cases.csv")
+```
+
+
+
+## Now it is in color by country:
+
+
+
+
+```{r, echo= FALSE}
+ggplot(data=mers)+
+  geom_bar(mapping = aes(x=epi.day,fill=country))+
+  labs(x='Epidemic day',y='Case count',title='Global count of MERS cases by date of symptom onset',caption="Data from: https://github.com/rambaut/MERS-Cases/blob/gh-pages/data/cases.csv")
+```
+
+
+
+## This may also be a useful way to display this data.
+
+
+
+```{r, echo= FALSE}
+ggplot(data=mers)+
+  geom_bar(mapping = aes(x=epi.day,fill=country))+coord_flip()+
+  labs(x='Epidemic day',y='Case count',title='Global count of MERS cases by date of symptom onset',caption="Data from: https://github.com/rambaut/MERS-Cases/blob/gh-pages/data/cases.csv")
+```
+
+
+
+## An interactive plot of the MERS data:
+
+
+
+```{r, echo= FALSE}
+mers$infectious.period<-mers$hospitalized2-mers$onset2
+class(mers$infectious.period)
+mers$infectious.period<-as.numeric(mers$infectious.period,units="days")
+mers$infectious.period2<-ifelse(mers$infectious.period<0,0,mers$infectious.period)
+plot <- ggplot(data=subset(mers, gender %in% c('M', 'F') & country %in% c('KSA', 'Oman', 'Iran', 'Jordan', 'Qatar', 'South Korea', 'UAE'))) +
+  geom_point(mapping = aes(x=epi.day, y=infectious.period2, color=country)) +
+  facet_grid(gender ~ country)+
+  scale_y_continuous(limits = c(0,50))+
+    labs(x='Epidemic day', y='Infectious period', title='MERS infectious period by gender and country', caption='Data from: https://github.com/rambaut/MERS-Cases/blob/gh-pages/data/cases.csv')
+ggplotly(plot)
+```
+
+
+
